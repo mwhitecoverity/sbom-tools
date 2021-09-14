@@ -104,6 +104,38 @@ class GenericSbom:
         print ('---- SBOM report ---- ')
         print ('File name: {}'.format(self.fileName))
         print ('Type: {}'.format(type(self).__name__))
+
+        if self.product is not None:
+            if self.product.name is not None:
+                print(' SBOM of: {}'.format(self.product.name))
+            else:
+                print(' SBOM has no name!')
+
+            if self.product.sbomAuthor is not None:
+                print(' SBOM author(s): {}'.format(self.product.sbomAuthor))
+            else:
+                print(' SBOM has no authors!')
+
+
+            if self.product.creationDate is not None:
+                print(' SBOM timestamp: {}'.format(self.product.creationDate))
+            else:
+                print(' SBOM has no timestamp!')
+
+
+
+            #if self.product.supplierName is not None:
+            #    print(' SBOM supplier(s): {}'.format(self.product.supplierName))
+            #else:
+            #    print(' SBOM has no supplier name!')
+
+
+            if self.product.id is not None:
+                print(' SBOM ID: {}'.format(self.product.id))
+            else:
+                print(' SBOM has no ID!')
+
+
         if self.packages is not None:
             print (' Has packages: Yes')
             for p in self.packages:

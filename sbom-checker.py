@@ -36,7 +36,14 @@ explanations = {
     'SpdxJsonSbom': 'SPDX JSON Format',
     'SpdxTvSbom': 'SPDX Tag-Value Format',
     'CdxXmlSbom': 'Cyclone DX XML Format',
-    'CdxJsonSbom': 'Cyclone DX JSON Format'
+    'CdxJsonSbom': 'Cyclone DX JSON Format',
+    'NTIA-Supplier-Name': 'All components have supplier names',
+    'NTIA-Component-Name': 'All components have names',
+    'NTIA-Unique-Identifier': 'All components have unique identifiers',
+    'NTIA-SBOM-Author': 'SBOM has an overall author',
+    'NTIA-Version-String': 'Components have a version identifier',
+    'NTIA-Relationships-Exist': 'Relationships exist',
+    'NTIA-SBOM-Timestamp': 'SBOM has a creation timestamp'
 
 }
 
@@ -64,7 +71,10 @@ with open('sbom-report.json') as fh:
             else:
                 do_inc(k)
 
+        print(row)
         if 'relationships' in row:
+            do_inc('NTIA-Relationships-Exist')
+
             if row['relationships'] == 1:
                 do_inc('only one relationship')
             if row['relationships'] == 2:
@@ -73,6 +83,24 @@ with open('sbom-report.json') as fh:
         if 'packages' in row:
             if row['packages'] == 1:
                 do_inc('only one package')
+            
+            for pd in row['packages']:
+                if 'id' in pd:
+                    do_inc('NTIA-Unique-Identifier')
+                if 'version' in pd:
+                    do_inc('NTIA-Version-String')
+                if 'name' in pd:
+                    do_inc('NTIA-Component-Name')
+                if 'supplier' in pd:
+                    do_inc('NTIA-Supplier-Name')
+    
+        if 'product' in row:
+            if 'sbomAuthor' in row['product']:
+                do_inc('NTIA-SBOM-Author')
+            if 'creationDate' in row['product']:
+                do_inc('NTIA-SBOM-Timestamp')
+
+        
 
            
 

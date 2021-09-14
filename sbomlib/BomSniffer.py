@@ -3,6 +3,7 @@ import xmltodict
 import re
 import gzip
 import json
+import yaml
 
 from . import * 
 
@@ -26,6 +27,15 @@ def try_xml(fh):
         return None
 
 
+def try_yaml(fh):
+    try:
+        res = yaml.safe_load(fh)
+
+        return res
+
+    except Exception as e:
+        return None
+
 class BomSniffer():
 
     sbom = None
@@ -47,6 +57,8 @@ class BomSniffer():
         if self.sbom['standard'] == 'spdx':
             if self.sbom['format'] == 'json':
                 parser = SpdxJsonSbom(self.sbom['file'])
+            elif self.sbom['format'] == 'xml/rdf':
+                parser = SpdxRdfSbom(self.sbom['file'])
             elif self.sbom['format'] == 'xml':
                 parser = None
             elif self.sbom['format'] == 'tv':
@@ -98,11 +110,14 @@ class BomSniffer():
                     j = try_json(fh)
                     fh.seek(0)
                     x = try_xml(fh)
+                    fh.seek(0)
+                    y = try_yaml(fh)
             else:
                 j = try_json(fl)
                 fl.seek(0)
                 x = try_xml(fl)
-
+                fl.seek(0)
+                y = try_yaml(fl)
 
             if j is not None:
                 if 'bomFormat' in j:
@@ -136,6 +151,9 @@ class BomSniffer():
                     #version = x['specVersion']
                 elif 'rdf:RDF' in x:
                     rdfRoot = x['rdf:RDF']
+                    
+                    info['format'] = 'xml/rdf'
+
                     spdxns = None
                     for ns in rdfRoot:
                         if rdfRoot[ns] == 'http://spdx.org/rdf/terms#':
@@ -150,8 +168,15 @@ class BomSniffer():
                     info['standard'] = 'spdx'
                     info['version'] = version
             
+            if y is not None and j is None:
+                # YAML
+                info['standard'] = 'spdx'
+                info['format'] = 'yaml'
+                info['version'] = y['spdxVersion']
+
+
             # Check for tag-value
-            if x is None and j is None:
+            if x is None and j is None and y is None:
                 fl.seek(0)
 
                 try: 
