@@ -57,7 +57,9 @@ class SpdxJsonSbom(GenericSbom):
                 h.algo = cc['algorithm']
                 h.value = cc['checksumValue']
                 hashes.append(h)
-            f.hash = hashes
+            f.hashes = hashes
+
+        return f
 
 
     def __init__(self, infile):
@@ -100,5 +102,5 @@ class SpdxJsonSbom(GenericSbom):
             if 'files' in data:
                 self.files = []
                 for f in data['files']:
-                    self.relationships.append(self.nodeToFile(f))
+                    self.files.append(self.nodeToFile(f))
         

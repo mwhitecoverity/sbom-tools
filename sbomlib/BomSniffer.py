@@ -63,6 +63,8 @@ class BomSniffer():
                 parser = None
             elif self.sbom['format'] == 'tv':
                 parser = SpdxTvSbom(self.sbom['file'])
+            elif self.sbom['format'] == 'yaml':
+                parser = SpdxYamlSbom(self.sbom['file'])
         elif self.sbom['standard'] == 'cdx':
             if self.sbom['format'] == 'xml':
                 parser = CdxXmlSbom(self.sbom['file'])

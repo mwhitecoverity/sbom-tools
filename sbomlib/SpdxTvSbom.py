@@ -176,13 +176,19 @@ class SpdxTvSbom(GenericSbom):
                     fp = FinalProduct()
                     fp.name = frag['DocumentName']
 
-                    if 'Creator' in frag:
-                        fp.sbomAuthor = frag['Creator']
-
-                    if 'Created' in frag:
-                        fp.creationDate = frag['Created']
-
                     self.product = fp
+
+                if 'Creator' in frag:
+                    if self.product is not None:
+                        if self.product.sbomAuthor is not None:
+                            self.product.sbomAuthor = self.product.sbomAuthor + ',' + frag['Creator']
+                        else:
+                            self.product.sbomAuthor = frag['Creator']
+
+                if 'Created' in frag:
+                    if self.product is not None:
+                        self.product.creationDate = frag['Created']
+
 
                 if 'FileName' in frag:
                     if self.files == None:

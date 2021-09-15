@@ -5,7 +5,6 @@ from typing import OrderedDict
 from .GenericSbom import GenericSbom
 from .SbomTypes import * 
 
-import xml.etree.ElementTree as ET
 from rdflib import Graph, URIRef, Literal
 from rdflib.namespace import Namespace
 
@@ -30,6 +29,8 @@ class SpdxRdfSbom(GenericSbom):
         fp = FinalProduct()
 
         for s, p, o in input.triples((None, RDF.type, self.spdxns["SpdxDocument"])):
+
+            self.extract_relationships(s, self.g)
 
             for ss, pp, oo in input.triples( (  s, self.spdxns['name'], None)  ):
 
@@ -67,33 +68,35 @@ class SpdxRdfSbom(GenericSbom):
     
     def extract_packages(self, input):
 
-        for s, p, o in input.triples((None, RDF.type, self.spdxns["Package"])):
+        for s, pv, o in input.triples((None, RDF.type, self.spdxns["Package"])):
 
-            p = Package()
+            pk = Package()
 
-            p.id = s.split('#')[1]
+            pk.id = s.split('#')[1]
 
-            for ss, pp, oo in input.triples((s,  self.spdxns["name"], None )):
-                if p.name is not None:
+            self.extract_relationships(s, self.g)
+
+            for ss, pp, oo in input.triples((o,  self.spdxns["name"], None )):
+                if pk.name is not None:
                     print('Warning - multiple names! {}'.format(oo))
-                p.name = oo
+                pk.name = oo
             
             for ss, pp, oo in input.triples((s,  self.spdxns["versionInfo"], None )):
-                if p.version is not None:
+                if pk.version is not None:
                     print('Warning - multiple versions! {}'.format(oo))
 
-                p.version = oo
+                pk.version = oo
 
             for ss, pp, oo in input.triples((s,  self.spdxns["supplier"], None )):
-                if p.supplierName is not None:
+                if pk.supplierName is not None:
                     print('Warning - multiple suppliers! {}'.format(oo))
 
-                p.supplierName = oo
+                pk.supplierName = oo
 
             
             for ss, pp, oo in input.triples((s,  self.spdxns["Checksum"], None )):
 
-                p.hashes = []
+                pk.hashes = []
 
                 h = Hash()
 
@@ -103,11 +106,10 @@ class SpdxRdfSbom(GenericSbom):
                 for sss, ppp, ooo in input.triples((ss, self.spdxns['checksumValue'], None)):
                     h.value = ooo
 
-                p.hashes.append(h)                
+                pk.hashes.append(h)                
 
-                
-        
-            self.packages.append(p)
+            self.packages.append(pk)
+
 
     def extract_files(self, input):
 
@@ -117,6 +119,7 @@ class SpdxRdfSbom(GenericSbom):
 
             f.id = s.split('#')[1]
 
+            self.extract_relationships(s, self.g)
 
             for ss, pp, oo in input.triples((s,  self.spdxns["fileName"], None )):
                 if f.name is not None:
@@ -149,6 +152,22 @@ class SpdxRdfSbom(GenericSbom):
             self.files.append(f)
 
 
+    def extract_relationships(self, starting, input):
+
+        for s, p, o in input.triples((starting, self.spdxns["Relationship"], None)):
+
+            rel = Relationship()
+
+            for ss, pp, oo in input.triples((s,  self.spdxns["relatedSpdxElement"], None )):
+                rel.fromId = starting
+                rel.toId = oo
+
+            for ss, pp, oo in input.triples((s,  self.spdxns["relationshipType"], None )):
+                rel.type = oo
+
+            self.relationships.append(rel)
+
+
 
     def __init__(self, infile):
         
@@ -156,10 +175,11 @@ class SpdxRdfSbom(GenericSbom):
 
         with open(infile) as fh:
 
-            data = ET.parse(infile)
-
             g = Graph()
+            self.g = g
             g.parse(fh, format="application/rdf+xml")
+
+            self.relationships = []
 
             self.extract_top_level(g)
 
@@ -167,13 +187,7 @@ class SpdxRdfSbom(GenericSbom):
             self.extract_packages(g)
 
             self.files = []
-
             self.extract_files(g)
 
 
-            #print('done')
 
-            
-
-
-            

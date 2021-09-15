@@ -45,6 +45,9 @@ class GenericSbom:
         report['bom'] = self.fileName
         report['type'] = type(self).__name__
 
+        allSuppliers = set()
+        allPackages = set()
+
         if self.packages is None:
             report['packages'] = 0
         else:
@@ -53,10 +56,13 @@ class GenericSbom:
             ids = 0
             hashes = 0
             names = 0
+            
 
             for p in self.packages:
+                allPackages.add(p.name)
                 if p.supplierName is not None:
                     supplierNames = supplierNames + 1
+                    allSuppliers.add(p.supplierName)
                 if p.id is not None:
                     ids = ids + 1
                 if p.hashes is not None:
@@ -68,6 +74,10 @@ class GenericSbom:
             report['packages_with_ids'] = ids
             report['packages_with_hashes'] = hashes
             report['packages_with_names'] = names   
+
+
+        report['supplier_names'] = list(allSuppliers)
+        report['package_names'] = list(allPackages)
 
         if self.relationships is not None:
             report['relationships'] = len(self.relationships)
@@ -164,6 +174,8 @@ class GenericSbom:
 
         if self.relationships is not None:
             print(' Has relationships: Yes')
+
+            print("  # relationships: {}".format(len(self.relationships)))
         else:
             print(' Has relationships: No')
 
