@@ -56,6 +56,7 @@ class GenericSbom:
             ids = 0
             hashes = 0
             names = 0
+            versions = 0
             
 
             for p in self.packages:
@@ -67,6 +68,8 @@ class GenericSbom:
                     ids = ids + 1
                 if p.hashes is not None:
                     hashes = hashes + 1
+                if p.version is not None:
+                    versions = versions + 1
                 if p.name is not None:
                     names = names + 1
 
@@ -74,6 +77,7 @@ class GenericSbom:
             report['packages_with_ids'] = ids
             report['packages_with_hashes'] = hashes
             report['packages_with_names'] = names   
+            report['packages_with_versions'] = versions
 
 
         report['supplier_names'] = list(allSuppliers)

@@ -44,7 +44,9 @@ class SpdxYamlSbom(GenericSbom):
                 h.algo = 'sha1'
                 p.hashes.append(h)
 
-
+            if 'versionInfo' in pkg:
+                p.version = pkg['versionInfo']
+                
             self.packages.append(p)
 
 

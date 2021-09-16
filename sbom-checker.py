@@ -22,6 +22,7 @@ explanations = {
     'files':'SBOM has file-level resolution',
     'sbom_target':'SBOM has \'sbom of what\' declared',
     'packages_with_hashes':'SBOM has hashes at the component/package layer',
+    'packages_with_versions':'SBOM has versions at the component/package layer',
 
     'only one relationship':'SBOM has only one relationship',
 
@@ -34,6 +35,11 @@ explanations = {
 
     'packages_with_suppliers':'SBOM packages that have supplier names',
     'SpdxJsonSbom': 'SPDX JSON Format',
+
+        'SpdxYamlSbom': 'SPDX Yaml Format',
+
+    'SpdxRdfSbom': 'SPDX RDF Format',
+
     'SpdxTvSbom': 'SPDX Tag-Value Format',
     'CdxXmlSbom': 'Cyclone DX XML Format',
     'CdxJsonSbom': 'Cyclone DX JSON Format',
@@ -73,7 +79,7 @@ with open('sbom-report.json') as fh:
 
         print(row)
         if 'relationships' in row:
-            do_inc('NTIA-Relationships-Exist')
+            #do_inc('NTIA-Relationships-Exist')
 
             if row['relationships'] == 1:
                 do_inc('only one relationship')
@@ -83,7 +89,8 @@ with open('sbom-report.json') as fh:
         if 'packages' in row:
             if row['packages'] == 1:
                 do_inc('only one package')
-            
+
+"""             
             for pd in row['packages']:
                 if 'id' in pd:
                     do_inc('NTIA-Unique-Identifier')
@@ -100,13 +107,13 @@ with open('sbom-report.json') as fh:
             if 'creationDate' in row['product']:
                 do_inc('NTIA-SBOM-Timestamp')
 
-        
+"""    
 
            
 
-    table =  [ ['Key', 'Explanation', 'Count', '%' ] ]
+table =  [ ['Key', 'Explanation', 'Count', '%' ] ]
 
-    for k in counts:
-        table.append([k, explanations.get(k), counts[k], round(counts[k]/total * 100 )])
+for k in counts:
+    table.append([k, explanations.get(k), counts[k], round(counts[k]/total * 100 )])
 
-    print(AsciiTable(table).table)
+print(AsciiTable(table).table)
