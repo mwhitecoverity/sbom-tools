@@ -50,6 +50,13 @@ with open(sys.argv[1]) as fl:
 
     data = json.load(fl)
 
+    # central node should be the top level 'package'
+
+    nt.add_node(label=data['name'], shape='square', n_id='ROOT')
+
+    mainPackage = data['documentDescribes']
+    fileRelationships = []
+
     if 'packages' not in data:
         print('- file does not have packages')
         sys.exit(1)
@@ -60,25 +67,61 @@ with open(sys.argv[1]) as fl:
 
     if 'files' not in data:
         print('- file does not have files (not fatal)')
-    #else:
-      #for f in data['files']:
-          #nt.add_node(f['SPDXID'], label=f['fileName'], size=5)
+    else:
+      for f in data['files']:
+          lbl = '{} (file)'.format(f['fileName'])
+
+          if 'checksums' in f:
+            for c in f['checksums']:
+              if c['algorithm'] == 'SHA1':
+                lbl = '{}\nSHA1:{}'.format(lbl, c['checksumValue'])
+
+          nt.add_node(f['SPDXID'], label=lbl, size=5)
 
     for p in data['packages']:
-        nt.add_node(p['SPDXID'], label=p['name'], size=10)
+        lbl = '{} (package)'.format(p['name'])
+
+        if 'checksums' in p:
+          for c in p['checksums']:
+            if c['algorithm'] == 'SHA1':
+              lbl = '{} SHA1:{}'.format(lbl, c['checksumValue'])
+
+        nt.add_node(p['SPDXID'], label=lbl, size=10)
+        if 'hasFiles' in p:
+          for ff in p['hasFiles']:
+            fileRelationships.append([p['SPDXID'], ff])
 
     for r in data['relationships']:
         if(r['relationshipType'] == 'CONTAINS' or r['relationshipType'] == 'DEPENDS_ON'):
-            rel = 'D' if r['relationshipType'] == 'DEPENDS_ON' else 'C'
-            try: 
-              nt.add_edge(r['spdxElementId'], r['relatedSpdxElement'], label=rel)
-            except Exception as e:
-              # do nothing print('-error adding node: {}'.format(e))
-              pass
+          rel = 'D' if r['relationshipType'] == 'DEPENDS_ON' else 'C'
+        else:
+          rel = r['relationshipType']
+
+        try: 
+          nt.add_edge(r['spdxElementId'], r['relatedSpdxElement'], label=rel)
+        except Exception as e:
+          # do nothing print('-error adding node: {}'.format(e))
+          pass
+    
+    for rel in fileRelationships:
+      nt.add_edge(rel[0], rel[1], label='f')
+
+    
+    print(nt.get_nodes())
+
+    for x in mainPackage:
+      nt.add_edge('ROOT', x)
 
 
 nt.show_buttons()
-nt.set_options(opts_string)
+nt.toggle_physics(True)
+
+nt.barnes_hut(overlap=1, spring_length=400, gravity=-100000)
+nt.toggle_stabilization(True)
+
+
+
+#nt.set_options(opts_string)
 
 print("Output: \"{}\"".format(outfile))
 nt.show(outfile)
